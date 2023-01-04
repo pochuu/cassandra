@@ -4,7 +4,7 @@
                  'replication_factor' : 1
      };
 
-    use keyspace aukcje;
+    use aukcje;
 
     CREATE TABLE bid_order_by_item_id (
             item_id int,
