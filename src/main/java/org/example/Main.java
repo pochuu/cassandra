@@ -48,16 +48,4 @@ private static final String PROPORTIES_FILENAME = "config.proporties";
         session.execute(query);
     }
 
-    CREATE TABLE bid_order_by_item_id (
-            item_id int primary key,
-            auction_id int,
-            winning_user_id int,
-            current_price bigint,
-            max_number_of_participants int,
-            participant_count int,
-            bid_start_time date,
-            bid_end_time date,
-            min_bid_amount int,
-            timestamp timestamp
-    );
 }
