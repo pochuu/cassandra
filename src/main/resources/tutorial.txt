@@ -1,0 +1,24 @@
+w powłoce kontenera uruchomienie .cql:
+cqlsh -f commands.cql -u cassandra -p cassandra
+
+wejście do kontenera jako root(mozna se dzieki temu vima zainstalować i skrypt wkleic):
+docker exec -u 0 -ti cassandra_cassandra_1 /bin/bash
+
+wejscie bez roota:
+docker exec -ti cassandra_cassandra_1 /bin/bash
+
+docker-compose.yml:
+version: '2'
+
+networks:
+  kasia:
+    driver: bridge
+
+services:
+  cassandra:
+    image: 'bitnami/cassandra:latest'
+    networks:
+      - kasia
+
+
+
