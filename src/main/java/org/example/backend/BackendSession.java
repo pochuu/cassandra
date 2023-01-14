@@ -34,8 +34,8 @@ public class BackendSession {
                 .withCredentials("cassandra", "cassandra")
                 .withPort(port)
                 .build();
-        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
         session = cluster.connect(keyspace);
+        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
     }
 
 
