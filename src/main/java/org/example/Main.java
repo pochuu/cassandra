@@ -3,9 +3,14 @@ package org.example;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
+import org.apache.cassandra.tools.nodetool.ResetLocalSchema;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Properties;
+
+import static java.lang.Thread.sleep;
 
 
 public class Main {
@@ -18,17 +23,38 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         Properties prop = new Properties();
-        String node = prop.getProperty("node1");
-        String port = prop.getProperty("port");
         prop.load(Main.class.getClassLoader().getResourceAsStream(PROPERTIES_FILENAME));
-
-
-        Cluster.Builder b = Cluster.builder().addContactPoint(node).withCredentials("cassandra", "cassandra");
+        String contactPoint = prop.getProperty("contactPoint");
+        String port = prop.getProperty("port");
+        Cluster.Builder b = Cluster.builder().addContactPoint(contactPoint).withCredentials("cassandra", "cassandra");
         b.withPort(Integer.parseInt(port));
         cluster = b.build();
         session = cluster.connect();
-        createKeyspace("test1", "SimpleStrategy", 0);
-        checkForAuctions();
+        session.execute("use aukcje;");
+        ResultSet rs = session.execute("SELECT * FROM test");
+
+//        checkForAuctions();
+        rs.forEach(
+                row -> {
+                    Date data = row.get("czas", Date.class);
+
+
+                    Date datamoja = new Date();
+                    datamoja.setTime(datamoja.getTime()-10000);
+                    long xd = System.currentTimeMillis()-10000;
+
+
+                    System.out.println("LONG INT Z REKORDU: " + data.getTime());
+                    System.out.println("System.currentTimeMillis()-10000 : " + xd);
+                    System.out.println("Obiekt Date z cofnietym longiem o 10 sekund:" + datamoja.getTime());
+                    System.out.println("Instant.now().toEpochMilli()-10000" + (Instant.now().minusSeconds(10)));
+                        try {
+                            sleep(1000);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    });
         close();
     }
 

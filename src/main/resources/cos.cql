@@ -13,17 +13,14 @@
             current_price bigint,
             max_number_of_participants int,
             participant_count int,
-            bid_start_time date,
-            bid_end_time date,
+            bid_end_time timestamp,
             min_bid_amount int,
-            timestamp timestamp,
             PRIMARY KEY(item_id)
     );
 
     CREATE TABLE item_by_id (
     id int,
     item_name text,
-    description text,
     winner_id int,
     start_bid bigint,
     PRIMARY KEY(id)
@@ -40,5 +37,26 @@
     user_id int,
     auction_id int,
     amount bigint,
-    PRIMARY KEY(user_id,auction_id)
+    PRIMARY KEY((user_id,auction_id))
     );
+
+    INSERT INTO user_by_id(id,name,balance) VALUES (1, 'Hubert', 9223372036854775807);
+    INSERT INTO user_by_id(id,name,balance) VALUES (2, 'Jonasz', 9223372036854775807);
+    INSERT INTO user_by_id(id,name,balance) VALUES (3, 'Maciej', 9223372036854775807);
+
+    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Obraz', 100);
+    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Dom', 3000);
+    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Mieszkanie', 2000);
+    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Auto', 500);
+    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Telewizor', 200);
+
+    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
+    VALUES (1, 1, 100, 5, dateof(now()), 10);
+    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
+    VALUES (2, 2, 3000, 5, dateof(now()), 50);
+    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
+    VALUES (3, 3, 2000, 5, dateof(now()), 100);
+    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
+    VALUES (4, 4, 500, 5, dateof(now()), 55);
+    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
+    VALUES (5, 5, 200, 5, dateof(now()), 40);
