@@ -1,10 +1,9 @@
 package org.example.backend;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.statements.BoundStatementFactory;
 
 import java.time.Instant;
 import java.util.Date;
@@ -22,6 +21,8 @@ public class BackendSession {
 
     private final Session session;
 
+    private final BoundStatementFactory statementFactory;
+
     private final long userId = 1L;
 
     public BackendSession(String contactPoint, String keyspace,
@@ -35,6 +36,7 @@ public class BackendSession {
                 .withPort(port)
                 .build();
         session = cluster.connect(keyspace);
+        statementFactory  = new BoundStatementFactory(session);
         createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
     }
 
@@ -42,18 +44,14 @@ public class BackendSession {
     private void createKeyspaceIfNotExists(
             String keyspaceName, String replicationStrategy, int replicationFactor) {
 
-        String query = "CREATE KEYSPACE IF NOT EXISTS " +
-                keyspaceName + " WITH replication = {" +
-                "'class':'" + replicationStrategy +
-                "','replication_factor':" + replicationFactor +
-                "};";
-        session.execute(query);
+        BoundStatement bs = statementFactory.createKeySpace();
+        bs.bind(keyspaceName, replicationStrategy, replicationFactor);
+        session.execute(bs);
     }
 
     public void checkForAuctions() {
-        String query = "SELECT * FROM bid_order_by_item_id";
-
-        ResultSet resultSet = session.execute(query);
+        BoundStatement bs = statementFactory.selectAllBids();
+        ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
                 row -> {
                     if ((row.get("winning_user_id", Long.class) != userId)) {
@@ -69,23 +67,21 @@ public class BackendSession {
     }
 
     public boolean userHasMoney(long amount) {
-        String query = "SELECT balance FROM user_by_id "
-                + "WHERE id=" + userId + ";";
-        ResultSet resultSet = session.execute(query);
+        BoundStatement bs = statementFactory.selectBalanceFromUser();
+        bs.bind(userId);
+        ResultSet resultSet = session.execute(bs);
         long balance = resultSet.one().get("balance", Long.class);
         return balance - 500 >= amount;
     }
 
     public void placeBid(long itemId, long auctionId, long newBid) {
-        String updateBidQuery = "UPDATE bid_order_by_item_id "
-                + "SET winning_user_id=" + userId + ", current_price=" + newBid
-                + " WHERE item_id=" + itemId + " AND auction_id=" + auctionId + ";";
+        BoundStatement updateBidBs = statementFactory.updateBid();
+        updateBidBs.bind(userId, newBid, itemId, auctionId);
+        BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
+        insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
 
-        String updateBidHistoryQuery = "INSERT INTO bid_history "
-                + "VALUES (" + userId + "," + auctionId + "," + newBid + ");";
-
-        session.execute(updateBidQuery);
-        session.execute(updateBidHistoryQuery);
+        session.execute(updateBidBs);
+        session.execute(insertIntoBidHistoryBs);
     }
 
     public void selectAll() {
