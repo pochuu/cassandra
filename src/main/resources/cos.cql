@@ -50,6 +50,9 @@
     INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Auto', 500);
     INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Telewizor', 200);
 
+
+// TO NIZEJ WKLEIĆ BO WYSTARTOWANIU SERWERA
+
     INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
     VALUES (1, 1, 100, 5, dateof(now()), 10);
     INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
