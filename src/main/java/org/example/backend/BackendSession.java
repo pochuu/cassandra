@@ -30,9 +30,9 @@ public class BackendSession {
                 .withCredentials("cassandra", "cassandra")
                 .withPort(port)
                 .build();
-        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
         session = cluster.connect(keyspace);
-        statementFactory  = new BoundStatementFactory(session);
+        this.statementFactory = new BoundStatementFactory(session);
+        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
     }
 
 
