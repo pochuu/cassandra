@@ -15,7 +15,7 @@ public class BoundStatementFactory {
     private final BoundStatement selectBalanceFromUser;
     private final BoundStatement selectAllBids;
     private final BoundStatement insertIntoBidHistory;
-    private final BoundStatement createKeySpace;
+//    private final BoundStatement createKeySpace;
     private final BoundStatement CheckUserBalance;
     private final BoundStatement GiveBackMoneyToUser;
 
@@ -25,7 +25,7 @@ public class BoundStatementFactory {
         selectBalanceFromUser = new BoundStatement(session.prepare(SELECT_BALANCE_FROM_USER));
         selectAllBids = new BoundStatement(session.prepare(SELECT_ALL_FROM_BID_ORDER));
         insertIntoBidHistory = new BoundStatement(session.prepare(INSERT_INTO_BID_HISTORY));
-        createKeySpace = new BoundStatement(session.prepare(CREATE_KEYSPACE_IF_NOT_EXISTS));
+//        createKeySpace = new BoundStatement(session.prepare(CREATE_KEYSPACE_IF_NOT_EXISTS));
         CheckUserBalance = new BoundStatement(session.prepare(CHECK_USER_BALANCE));
         GiveBackMoneyToUser = new BoundStatement(session.prepare(GIVE_BACK_MONEY_TO_USER));
     }

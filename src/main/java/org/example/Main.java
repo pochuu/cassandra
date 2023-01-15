@@ -2,6 +2,8 @@ package org.example;
 
 import java.io.IOException;
 import java.util.Properties;
+
+import com.datastax.driver.core.ResultSet;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
 import org.example.backend.dealer.DealerService;
@@ -16,16 +18,16 @@ public class Main {
     public static void main(String[] args) {
         try {
             BackendSession backendSession = loadPropertiesAndInitBackendSession();
-            UserService userService = new UserService();
-            DealerService dealerService = new DealerService();
-            userService.execute(new UserBiddingThread(backendSession), 50);
-            dealerService.execute(new DealerThread(backendSession), 2);
+            ResultSet rs = backendSession.getSession().execute("DELETE FROM bid_history WHERE user_id = 1;");
+//            UserService userService = new UserService();
+//            DealerService dealerService = new DealerService();
+//            userService.execute(new UserBiddingThread(backendSession), 50);
+//            dealerService.execute(new DealerThread(backendSession), 2);
+            System.out.println("x");
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
         } catch (IOException e) {
             log.error("Could not read properties file: " + e.getMessage());
-        } catch (InterruptedException e) {
-            log.error("Runtime exception: " + e.getMessage());
         }
     }
 

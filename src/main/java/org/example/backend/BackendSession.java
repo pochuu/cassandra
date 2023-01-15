@@ -32,17 +32,17 @@ public class BackendSession {
                 .build();
         session = cluster.connect(keyspace);
         this.statementFactory = new BoundStatementFactory(session);
-        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
+//        createKeyspaceIfNotExists(replicationStrategy, replicationFactor);
     }
 
 
-    private void createKeyspaceIfNotExists(
-            String keyspaceName, String replicationStrategy, int replicationFactor) {
-
-        BoundStatement bs = statementFactory.createKeySpace();
-        bs.bind(keyspaceName, replicationStrategy, replicationFactor);
-        session.execute(bs);
-    }
+//    private void createKeyspaceIfNotExists(
+//            String replicationStrategy, int replicationFactor) {
+//
+//        BoundStatement bs = statementFactory.createKeySpace();
+//        bs.bind(replicationStrategy, replicationFactor);
+//        session.execute(bs);
+//    }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {
         BoundStatement bs = statementFactory.selectAllBids();

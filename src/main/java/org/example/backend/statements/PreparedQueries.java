@@ -2,7 +2,7 @@ package org.example.backend.statements;
 
 public class PreparedQueries {
     public static String CREATE_KEYSPACE_IF_NOT_EXISTS = "CREATE KEYSPACE IF NOT EXISTS " +
-            "(?) WITH replication = {'class':'(?)','replication_factor':(?)};";
+            "aukcje WITH replication = {'class':'(?)','replication_factor':2};";
     public static String SELECT_ALL_FROM_BID_ORDER = "SELECT * FROM bid_order_by_item_id";
     public static String SELECT_BALANCE_FROM_USER = "SELECT balance FROM user_by_id WHERE id=(?);";
     public static String UPDATE_BID_ORDER = "UPDATE bid_order_by_item_id "
