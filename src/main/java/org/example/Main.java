@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
+import org.example.backend.dealer.DealerService;
+import org.example.backend.dealer.DealerThread;
+import org.example.backend.user.UserBiddingThread;
+import org.example.backend.user.UserService;
 
 @Slf4j
 public class Main {
@@ -12,12 +16,16 @@ public class Main {
     public static void main(String[] args) {
         try {
             BackendSession backendSession = loadPropertiesAndInitBackendSession();
-            backendSession.selectAll();
-            backendSession.close();
+            UserService userService = new UserService();
+            DealerService dealerService = new DealerService();
+            userService.execute(new UserBiddingThread(backendSession), 50);
+            dealerService.execute(new DealerThread(backendSession), 2);
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
         } catch (IOException e) {
             log.error("Could not read properties file: " + e.getMessage());
+        } catch (InterruptedException e) {
+            log.error("Runtime exception: " + e.getMessage());
         }
     }
 

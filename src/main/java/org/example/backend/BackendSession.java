@@ -5,11 +5,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.statements.BoundStatementFactory;
 
-import java.time.Instant;
-import java.util.Date;
-
-import static java.lang.Thread.sleep;
-
 @Slf4j
 @Getter
 public class BackendSession {
@@ -35,9 +30,9 @@ public class BackendSession {
                 .withCredentials("cassandra", "cassandra")
                 .withPort(port)
                 .build();
+        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
         session = cluster.connect(keyspace);
         statementFactory  = new BoundStatementFactory(session);
-        createKeyspaceIfNotExists(keyspace, replicationStrategy, replicationFactor);
     }
 
 
@@ -49,7 +44,7 @@ public class BackendSession {
         session.execute(bs);
     }
 
-    public void checkForAuctions() {
+    public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {
         BoundStatement bs = statementFactory.selectAllBids();
         ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
@@ -83,35 +78,7 @@ public class BackendSession {
         session.execute(updateBidBs);
         session.execute(insertIntoBidHistoryBs);
     }
-
-    public void selectAll() {
-        ResultSet rs = session.execute("SELECT * FROM test");
-
-//        checkForAuctions();
-        rs.forEach(
-                row -> {
-                    Date data = row.get("czas", Date.class);
-
-
-                    Date datamoja = new Date();
-                    datamoja.setTime(datamoja.getTime()-10000);
-                    long xd = System.currentTimeMillis()-10000;
-
-
-                    System.out.println("LONG INT Z REKORDU: " + data.getTime());
-                    System.out.println("System.currentTimeMillis()-10000 : " + xd);
-                    System.out.println("Obiekt Date z cofnietym longiem o 10 sekund:" + datamoja.getTime());
-                    System.out.println("Instant.now().minusSeconds(10)" + (Instant.now().minusSeconds(10)));
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                });
-    }
-
-    public void close() {
+        public void close() {
         session.close();
         cluster.close();
     }

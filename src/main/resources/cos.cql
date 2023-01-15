@@ -36,8 +36,9 @@
     CREATE TABLE bid_history(
     user_id int,
     auction_id int,
+    id uuid,
     amount bigint,
-    PRIMARY KEY((user_id,auction_id))
+    PRIMARY KEY(user_id,auction_id, id)
     );
 
     INSERT INTO user_by_id(id,name,balance) VALUES (1, 'Hubert', 9223372036854775807);
