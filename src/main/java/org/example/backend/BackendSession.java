@@ -39,13 +39,8 @@ public class BackendSession {
     }
 
     public void giveRefundsToUsers() {
-//        BoundStatement selectAllFromBidRefund = new BoundStatement(statementFactory.SelectAllBidRefund());
-//        SELECT_ALL_FROM_BID_REFUND // jezeli sa jakies rekordy to leci
-//                //generate UUID
-//        MARK_THE_RECORDS_IN_BID_REFUND //przypisujemy wygenerowane uuid do rekordow z refundem na false
-//        SELECT_BID_HISTORY_WITH_KNOWN_UUID
-//        UPDATE_USER_MONEY // oddajemy kaske
-//        INSERT_REFUND_IS_DONE_TO_MARKED_USERS // ustawiamy w tabeli refund na true, dla wygenerowanego UUID
+        BoundStatement selectAllFromBidRefund = new BoundStatement(statementFactory.SelectAllBidRefund());
+
     }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {

@@ -37,7 +37,6 @@
     auction_id int,
     id uuid,
     amount bigint,
-    batch uuid(),
     PRIMARY KEY(user_id, auction_id, id)
     );
 
