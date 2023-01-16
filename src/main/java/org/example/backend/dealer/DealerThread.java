@@ -2,7 +2,7 @@ package org.example.backend.dealer;
 
 import org.example.backend.BackendSession;
 
-public class DealerThread extends Thread{
+public class DealerThread implements Runnable{
     private final BackendSession backendSession;
     public DealerThread(BackendSession backendSession) {
         this.backendSession = backendSession;
@@ -10,10 +10,7 @@ public class DealerThread extends Thread{
 
     @Override
     public void run() {
-        while(true) {
-            backendSession.UpdateBidRefund();
-        }
-        backendSession.close();
+        System.out.println("test");
     }
 
 }

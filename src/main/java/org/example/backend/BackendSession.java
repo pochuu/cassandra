@@ -3,6 +3,7 @@ package org.example.backend;
 import com.datastax.driver.core.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cassandra.db.RangeTombstone;
 import org.apache.cassandra.db.Slice;
 import org.example.backend.statements.BoundStatementFactory;
 
@@ -38,8 +39,13 @@ public class BackendSession {
     }
 
     public void giveRefundsToUsers() {
-        BoundStatement bs = statementFactory.MarkBidRefundHistory();
-
+//        BoundStatement selectAllFromBidRefund = new BoundStatement(statementFactory.SelectAllBidRefund());
+//        SELECT_ALL_FROM_BID_REFUND // jezeli sa jakies rekordy to leci
+//                //generate UUID
+//        MARK_THE_RECORDS_IN_BID_REFUND //przypisujemy wygenerowane uuid do rekordow z refundem na false
+//        SELECT_BID_HISTORY_WITH_KNOWN_UUID
+//        UPDATE_USER_MONEY // oddajemy kaske
+//        INSERT_REFUND_IS_DONE_TO_MARKED_USERS // ustawiamy w tabeli refund na true, dla wygenerowanego UUID
     }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {

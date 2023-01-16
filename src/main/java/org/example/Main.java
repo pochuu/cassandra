@@ -19,16 +19,18 @@ public class Main {
     public static void main(String[] args) {
         try {
             BackendSession backendSession = loadPropertiesAndInitBackendSession();
+            DealerService dealerService = new DealerService();
+            dealerService.execute(new DealerThread(backendSession), 1);
 
 //            UserService userService = new UserService();
-//            DealerService dealerService = new DealerService();
 //            userService.execute(new UserBiddingThread(backendSession), 50);
-//            dealerService.execute(new DealerThread(backendSession), 2);
             System.out.println("breakpoint");
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
         } catch (IOException e) {
             log.error("Could not read properties file: " + e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
