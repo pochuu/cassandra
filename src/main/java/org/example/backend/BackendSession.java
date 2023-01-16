@@ -76,21 +76,19 @@ public class BackendSession {
     public void placeBid(long itemId, long auctionId, long newBid) {
         BoundStatement updateBidBs = statementFactory.updateBid();
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
-        BoundStatement insertIntoBidRefundBs = statementFactory.insertIntoBidRefund();
+        BoundStatement updateUserDebtBs = statementFactory.updateUserDebt();
         UUID uuid = UUID.randomUUID();
         updateBidBs.bind(userId, newBid, itemId, auctionId);
         insertIntoBidHistoryBs.bind(userId, auctionId,uuid, newBid);
-        insertIntoBidRefundBs.bind(false, uuid, userId, uuid, newBid); //2uuid wypełniamy bo tak
-                                                                                // trzeba, ale nie ma to
+        updateUserDebtBs.bind(newBid, userId);
+
+        session.execute(updateUserDebtBs);
         session.execute(updateBidBs);
         session.execute(insertIntoBidHistoryBs);
-        session.execute(insertIntoBidRefundBs);
     }
         public void close() {
         session.close();
         cluster.close();
     }
 
-    public void UpdateBidRefund() {
-    }
 }

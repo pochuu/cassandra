@@ -7,15 +7,13 @@
     use aukcje;
 
     CREATE TABLE bid_order_by_item_id (
-            item_id int,
             auction_id int,
+            item_id int,
             winning_user_id int,
             current_price bigint,
-            max_number_of_participants int,
-            participant_count int,
             bid_end_time timestamp,
             min_bid_amount int,
-            PRIMARY KEY(item_id, auction_id)
+            PRIMARY KEY(auction_id)
     );
 
     CREATE TABLE item_by_id (
@@ -30,16 +28,8 @@
     id int,
     name text,
     balance bigint,
+    debt counter,
     PRIMARY KEY(id)
-    );
-
-   CREATE TABLE bid_refund (
-    refund boolean,
-    transaction uuid,
-    user_id int,
-    id uuid,
-    amount bigint,
-    PRIMARY KEY(refund, transaction, user_id, id)
     );
 
     CREATE TABLE bid_history(
@@ -47,6 +37,7 @@
     auction_id int,
     id uuid,
     amount bigint,
+    batch uuid(),
     PRIMARY KEY(user_id, auction_id, id)
     );
 
@@ -73,3 +64,5 @@
     VALUES (4, 4, 500, 5, dateof(now()), 55);
     INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
     VALUES (5, 5, 200, 5, dateof(now()), 40);
+
+
