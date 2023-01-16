@@ -3,7 +3,10 @@ package org.example.backend;
 import com.datastax.driver.core.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cassandra.db.Slice;
 import org.example.backend.statements.BoundStatementFactory;
+
+import java.util.UUID;
 
 @Slf4j
 @Getter
@@ -32,17 +35,12 @@ public class BackendSession {
                 .build();
         session = cluster.connect(keyspace);
         this.statementFactory = new BoundStatementFactory(session);
-//        createKeyspaceIfNotExists(replicationStrategy, replicationFactor);
     }
 
+    public void giveRefundsToUsers() {
+        BoundStatement bs = statementFactory.MarkBidRefundHistory();
 
-//    private void createKeyspaceIfNotExists(
-//            String replicationStrategy, int replicationFactor) {
-//
-//        BoundStatement bs = statementFactory.createKeySpace();
-//        bs.bind(replicationStrategy, replicationFactor);
-//        session.execute(bs);
-//    }
+    }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {
         BoundStatement bs = statementFactory.selectAllBids();
@@ -71,15 +69,22 @@ public class BackendSession {
 
     public void placeBid(long itemId, long auctionId, long newBid) {
         BoundStatement updateBidBs = statementFactory.updateBid();
-        updateBidBs.bind(userId, newBid, itemId, auctionId);
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
-        insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
-
+        BoundStatement insertIntoBidRefundBs = statementFactory.insertIntoBidRefund();
+        UUID uuid = UUID.randomUUID();
+        updateBidBs.bind(userId, newBid, itemId, auctionId);
+        insertIntoBidHistoryBs.bind(userId, auctionId,uuid, newBid);
+        insertIntoBidRefundBs.bind(false, uuid, userId, uuid, newBid); //2uuid wypełniamy bo tak
+                                                                                // trzeba, ale nie ma to
         session.execute(updateBidBs);
         session.execute(insertIntoBidHistoryBs);
+        session.execute(insertIntoBidRefundBs);
     }
         public void close() {
         session.close();
         cluster.close();
+    }
+
+    public void UpdateBidRefund() {
     }
 }

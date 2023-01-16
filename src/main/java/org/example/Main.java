@@ -3,6 +3,7 @@ package org.example;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.ResultSet;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
@@ -18,12 +19,12 @@ public class Main {
     public static void main(String[] args) {
         try {
             BackendSession backendSession = loadPropertiesAndInitBackendSession();
-            ResultSet rs = backendSession.getSession().execute("DELETE FROM bid_history WHERE user_id = 1;");
+
 //            UserService userService = new UserService();
 //            DealerService dealerService = new DealerService();
 //            userService.execute(new UserBiddingThread(backendSession), 50);
 //            dealerService.execute(new DealerThread(backendSession), 2);
-            System.out.println("x");
+            System.out.println("breakpoint");
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
         } catch (IOException e) {

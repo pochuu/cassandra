@@ -11,7 +11,7 @@ public class DealerThread extends Thread{
     @Override
     public void run() {
         while(true) {
-            break;
+            backendSession.UpdateBidRefund();
         }
         backendSession.close();
     }

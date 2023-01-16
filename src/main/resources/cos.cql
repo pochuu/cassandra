@@ -15,7 +15,7 @@
             participant_count int,
             bid_end_time timestamp,
             min_bid_amount int,
-            PRIMARY KEY(item_id)
+            PRIMARY KEY(item_id, auction_id)
     );
 
     CREATE TABLE item_by_id (
@@ -33,12 +33,21 @@
     PRIMARY KEY(id)
     );
 
+   CREATE TABLE bid_refund (
+    refund boolean,
+    transaction uuid,
+    user_id int,
+    id uuid,
+    amount bigint,
+    PRIMARY KEY(refund, transaction, user_id, id)
+    );
+
     CREATE TABLE bid_history(
     user_id int,
     auction_id int,
     id uuid,
     amount bigint,
-    PRIMARY KEY(user_id,auction_id, id)
+    PRIMARY KEY(user_id, auction_id, id)
     );
 
     INSERT INTO user_by_id(id,name,balance) VALUES (1, 'Hubert', 9223372036854775807);
