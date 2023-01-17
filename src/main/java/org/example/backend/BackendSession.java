@@ -38,7 +38,7 @@ public class BackendSession {
         BoundStatement bs = statementFactory.selectDebtFromUser();
         bs.bind(userId);
         ResultSet resultSet = session.execute(bs);
-        long debt = resultSet.one().get("debt", Long.class);
+        long debt = resultSet.one().getLong("debt");
         long currentWinningBids = addBidsFromWinningAuctions(userId);
         if (debt != currentWinningBids) {
             giveRefundToUser(userId, debt - currentWinningBids);
@@ -50,8 +50,8 @@ public class BackendSession {
         ResultSet resultSet = session.execute(bs);
         AtomicLong winningBidAmount = new AtomicLong();
         resultSet.forEach(row -> {
-            if (row.get("winning_user_id", Long.class) == userId) {
-                winningBidAmount.getAndAdd(row.get("current_price", Long.class));
+            if (row.getInt("winning_user_id") == userId) {
+                winningBidAmount.getAndAdd(row.getLong("current_price"));
             }
         });
         return winningBidAmount.get();
@@ -72,12 +72,14 @@ public class BackendSession {
         ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
                 row -> {
-                    if (row.get("winning_user_id", int.class) != userId) {
-                        long itemId = row.get("item_id", int.class);
-                        long auctionId = row.get("auction_id", int.class);
-                        long currentPrice = row.get("currentPrice", long.class);
-                        if (userHasMoney(currentPrice)) {
-                            placeBid(itemId, auctionId, currentPrice + 500, currentPrice);
+                    {
+                        if (row.getInt("winning_user_id") != userId) {
+                            long itemId = row.getInt("item_id");
+                            long auctionId = row.getInt("auction_id");
+                            long currentPrice = row.getLong("currentPrice");
+                            if (userHasMoney(currentPrice)) {
+                                placeBid(itemId, auctionId, currentPrice + 500, currentPrice);
+                            }
                         }
                     }
                 }
@@ -88,7 +90,7 @@ public class BackendSession {
         BoundStatement bs = statementFactory.selectBalanceFromUser();
         bs.bind(userId);
         ResultSet resultSet = session.execute(bs);
-        long balance = resultSet.one().get("balance", Long.class);
+        long balance = resultSet.one().getLong("balance");
         return balance - 500 >= amount;
     }
 
