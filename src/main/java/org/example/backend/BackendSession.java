@@ -3,11 +3,9 @@ package org.example.backend;
 import com.datastax.driver.core.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.cassandra.db.RangeTombstone;
-import org.apache.cassandra.db.Slice;
 import org.example.backend.statements.BoundStatementFactory;
 
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Getter
@@ -24,8 +22,7 @@ public class BackendSession {
 
     private final long userId = 1L;
 
-    public BackendSession(String contactPoint, String keyspace,
-                          String replicationStrategy, int replicationFactor, int port)
+    public BackendSession(String contactPoint, String keyspace, int port)
     {
         this.contactPoint = contactPoint;
         this.keyspace= keyspace;
@@ -38,8 +35,33 @@ public class BackendSession {
         this.statementFactory = new BoundStatementFactory(session);
     }
 
-    public void giveRefundsToUsers() {
+    public void checkUserDebtAndRefundIfNeeded(int userId) {
+        BoundStatement bs = statementFactory.selectDebtFromUser();
+        bs.bind(userId);
+        ResultSet resultSet = session.execute(bs);
+        long debt = resultSet.one().get("debt", Long.class);
+        long currentWinningBids = addBidsFromWinningAuctions(userId);
+        if (debt != currentWinningBids) {
+            giveRefundToUser(userId, debt - currentWinningBids);
+        }
+    }
 
+    private long addBidsFromWinningAuctions(int userId) {
+        BoundStatement bs = statementFactory.selectAllBids();
+        ResultSet resultSet = session.execute(bs);
+        AtomicLong winningBidAmount = new AtomicLong();
+        resultSet.forEach(row -> {
+            if (row.get("winning_user_id", Long.class) == userId) {
+                winningBidAmount.getAndAdd(row.get("current_price", Long.class));
+            }
+        });
+        return winningBidAmount.get();
+    }
+
+    private void giveRefundToUser(long userId, long amount) {
+        BoundStatement bs = statementFactory.updateUserDebt();
+        bs.bind(-amount, userId);
+        session.execute(bs);
     }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {

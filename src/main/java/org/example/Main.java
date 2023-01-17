@@ -3,14 +3,9 @@ package org.example;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.ResultSet;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
 import org.example.backend.dealer.DealerService;
-import org.example.backend.dealer.DealerThread;
-import org.example.backend.user.UserBiddingThread;
-import org.example.backend.user.UserService;
 
 @Slf4j
 public class Main {
@@ -40,8 +35,6 @@ public class Main {
         String contactPoint = prop.getProperty("contactPoint");
         int port = Integer.parseInt(prop.getProperty("port"));
         String keySpace = prop.getProperty("keySpace");
-        String replicationStrategy = prop.getProperty("replicationStrategy");
-        int replicationFactor = Integer.parseInt(prop.getProperty("replicationFactor"));
-        return new BackendSession(contactPoint, keySpace, replicationStrategy, replicationFactor, port);
+        return new BackendSession(contactPoint, keySpace, port);
     }
 }

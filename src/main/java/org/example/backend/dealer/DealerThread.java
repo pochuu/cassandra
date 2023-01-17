@@ -1,6 +1,5 @@
 package org.example.backend.dealer;
 
-import com.datastax.driver.core.BoundStatement;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.backend.BackendSession;
@@ -17,7 +16,7 @@ public class DealerThread implements Runnable{
 
     @Override
     public void run() {
-        backendSession.giveRefundsToUsers();
+        backendSession.checkUserDebtAndRefundIfNeeded(user_id);
     }
 
 }

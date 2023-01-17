@@ -10,6 +10,6 @@ public class PreparedQueries {
     public static String INSERT_INTO_BID_HISTORY = "INSERT INTO bid_history(user_id, auction_id, id, amount) " +
             "VALUES ((?), (?), uuid(), (?))";
     public static String UPDATE_USER_DEBT = "UPDATE user_by_id_with_debt SET debt = debt + (?) WHERE id = (?)";
-    public static String SELECT_USER_DEBT  = "SELECT * FROM user_by_id_with_debt";
+    public static String SELECT_ALL_FROM_USER_DEBT  = "SELECT * FROM user_by_id_with_debt WHERE id = (?)";
 
 }
