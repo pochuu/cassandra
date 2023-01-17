@@ -62,6 +62,10 @@ public class BackendSession {
         BoundStatement bs = statementFactory.updateUserDebt();
         bs.bind(-amount, userId);
         session.execute(bs);
+
+        bs = statementFactory.updateUserBalance();
+        bs.bind(amount, userId);
+        session.execute(bs);
     }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException{
