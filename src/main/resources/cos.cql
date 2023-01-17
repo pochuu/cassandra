@@ -27,13 +27,17 @@
     CREATE TABLE user_by_id (
     id int,
     name text,
-    balance bigint,
     PRIMARY KEY(id)
     );
 
     CREATE TABLE user_by_id_with_debt(
     id int,
     debt counter,
+    PRIMARY KEY(id));
+
+    CREATE TABLE user_by_id_with_balance(
+    id int,
+    balance counter,
     PRIMARY KEY(id));
 
     CREATE TABLE bid_history(
@@ -44,9 +48,13 @@
     PRIMARY KEY(user_id, auction_id, id)
     );
 
-    INSERT INTO user_by_id(id,name,balance) VALUES (1, 'Hubert', 9223372036854775807);
-    INSERT INTO user_by_id(id,name,balance) VALUES (2, 'Jonasz', 9223372036854775807);
-    INSERT INTO user_by_id(id,name,balance) VALUES (3, 'Maciej', 9223372036854775807);
+    INSERT INTO user_by_id(id,name) VALUES (1, 'Hubert');
+    UPDATE user_by_id_with_balance SET balance = balance + 500000 WHERE id = 1;
+    INSERT INTO bid_order_by_item_id (auction_id , item_id , current_price ) VALUES (1,1,500);
+
+
+    INSERT INTO user_by_id(id,name) VALUES (2, 'Jonasz');
+    INSERT INTO user_by_id(id,name) VALUES (3, 'Maciej');
 
     INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Obraz', 100);
     INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Dom', 3000);

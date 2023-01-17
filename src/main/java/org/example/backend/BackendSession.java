@@ -64,15 +64,15 @@ public class BackendSession {
         session.execute(bs);
     }
 
-    public void checkForAuctionsAndPlaceBidIfImNotTheWinner() {
+    public void checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException{
         BoundStatement bs = statementFactory.selectAllBids();
         ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
                 row -> {
-                    if ((row.get("winning_user_id", Long.class) != userId)) {
-                        long itemId = row.get("item_id", Long.class);
-                        long auctionId = row.get("auction_id", Long.class);
-                        long currentPrice = row.get("currentPrice", Long.class);
+                    if (row.get("winning_user_id", int.class) != userId) {
+                        long itemId = row.get("item_id", int.class);
+                        long auctionId = row.get("auction_id", int.class);
+                        long currentPrice = row.get("currentPrice", long.class);
                         if (userHasMoney(currentPrice)) {
                             placeBid(itemId, auctionId, currentPrice + 500, currentPrice);
                         }
@@ -93,14 +93,17 @@ public class BackendSession {
         BoundStatement updateBidBs = statementFactory.updateBid();
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
         BoundStatement updateUserDebtBs = statementFactory.updateUserDebt();
+        BoundStatement updateUserBalanceBs = statementFactory.updateUserBalance();
         BatchStatement batchStatement = new BatchStatement();
 
         updateBidBs.bind(userId, newBid, itemId, auctionId, currentPrice);
         insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
         updateUserDebtBs.bind(500, userId);//poki co hardkode
+        updateUserBalanceBs.bind(500, userId);
 
         batchStatement.add(updateBidBs);
         batchStatement.add(insertIntoBidHistoryBs);
+        batchStatement.add(updateUserBalanceBs);
         batchStatement.add(updateUserDebtBs);
 
         session.execute(batchStatement); //lepiej to w batchu wyslac, 3 tabelki lepiej zeby sie nie rozjechaly
