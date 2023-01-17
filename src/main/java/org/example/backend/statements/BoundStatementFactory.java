@@ -17,6 +17,8 @@ public class BoundStatementFactory {
     private final BoundStatement selectAllBids;
     private final BoundStatement insertIntoBidHistory;
     private final BoundStatement updateUserDebt;
+    private final BoundStatement selectAllUsers;
+    private final BoundStatement selectDebtFromUser;
 
     public BoundStatementFactory(Session session) {
         updateBid = new BoundStatement(session.prepare(UPDATE_BID_ORDER));
@@ -24,6 +26,8 @@ public class BoundStatementFactory {
         selectAllBids = new BoundStatement(session.prepare(SELECT_ALL_FROM_BID_ORDER));
         insertIntoBidHistory = new BoundStatement(session.prepare(INSERT_INTO_BID_HISTORY));
         updateUserDebt = new BoundStatement(session.prepare(UPDATE_USER_DEBT));
+        selectAllUsers = new BoundStatement(session.prepare(SELECT_ALL_FROM_USERS));
+        selectDebtFromUser = new BoundStatement(session.prepare(SELECT_DEBT_FROM_USER));
     }
 
 }

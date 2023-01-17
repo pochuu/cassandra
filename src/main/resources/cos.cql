@@ -28,9 +28,13 @@
     id int,
     name text,
     balance bigint,
-    debt counter,
     PRIMARY KEY(id)
     );
+
+    CREATE TABLE user_by_id_with_debt(
+    id int,
+    debt counter,
+    PRIMARY KEY(id));
 
     CREATE TABLE bid_history(
     user_id int,

@@ -39,7 +39,6 @@ public class BackendSession {
     }
 
     public void giveRefundsToUsers() {
-        BoundStatement selectAllFromBidRefund = new BoundStatement(statementFactory.SelectAllBidRefund());
 
     }
 
@@ -53,7 +52,7 @@ public class BackendSession {
                         long auctionId = row.get("auction_id", Long.class);
                         long currentPrice = row.get("currentPrice", Long.class);
                         if (userHasMoney(currentPrice)) {
-                            placeBid(itemId, auctionId, currentPrice + 500);
+                            placeBid(itemId, auctionId, currentPrice + 500, currentPrice);
                         }
                     }
                 }
@@ -68,18 +67,21 @@ public class BackendSession {
         return balance - 500 >= amount;
     }
 
-    public void placeBid(long itemId, long auctionId, long newBid) {
+    public void placeBid(long itemId, long auctionId, long newBid, long currentPrice) {
         BoundStatement updateBidBs = statementFactory.updateBid();
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
         BoundStatement updateUserDebtBs = statementFactory.updateUserDebt();
-        UUID uuid = UUID.randomUUID();
-        updateBidBs.bind(userId, newBid, itemId, auctionId);
-        insertIntoBidHistoryBs.bind(userId, auctionId,uuid, newBid);
-        updateUserDebtBs.bind(newBid, userId);
+        BatchStatement batchStatement = new BatchStatement();
 
-        session.execute(updateUserDebtBs);
-        session.execute(updateBidBs);
-        session.execute(insertIntoBidHistoryBs);
+        updateBidBs.bind(userId, newBid, itemId, auctionId, currentPrice);
+        insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
+        updateUserDebtBs.bind(500, userId);//poki co hardkode
+
+        batchStatement.add(updateBidBs);
+        batchStatement.add(insertIntoBidHistoryBs);
+        batchStatement.add(updateUserDebtBs);
+
+        session.execute(batchStatement); //lepiej to w batchu wyslac, 3 tabelki lepiej zeby sie nie rozjechaly
     }
         public void close() {
         session.close();
