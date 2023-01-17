@@ -12,8 +12,11 @@ public class UserBiddingThread extends Thread{
     public void run() {
         while(true) {
             backendSession.checkForAuctionsAndPlaceBidIfImNotTheWinner();
-            break;
+            try {
+                sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
-        backendSession.close();
     }
 }
