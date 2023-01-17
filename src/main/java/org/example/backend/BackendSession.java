@@ -22,10 +22,9 @@ public class BackendSession {
 
     private final long userId = 1L;
 
-    public BackendSession(String contactPoint, String keyspace, int port)
-    {
+    public BackendSession(String contactPoint, String keyspace, int port) {
         this.contactPoint = contactPoint;
-        this.keyspace= keyspace;
+        this.keyspace = keyspace;
         cluster = Cluster.builder()
                 .addContactPoint(contactPoint)
                 .withCredentials("cassandra", "cassandra")
@@ -68,7 +67,7 @@ public class BackendSession {
         session.execute(bs);
     }
 
-    public void checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException{
+    public void checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException {
         BoundStatement bs = statementFactory.selectAllBids();
         ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
@@ -112,7 +111,8 @@ public class BackendSession {
 
         session.execute(batchStatement); //lepiej to w batchu wyslac, 3 tabelki lepiej zeby sie nie rozjechaly
     }
-        public void close() {
+
+    public void close() {
         session.close();
         cluster.close();
     }

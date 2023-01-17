@@ -7,16 +7,17 @@ import org.example.backend.BackendSession;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 public class DealerService {
     public void execute(BackendSession backendSession, int numberOfThreads) throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        BoundStatement selectAllUsersBs= backendSession.getStatementFactory().selectAllUsers();
+        BoundStatement selectAllUsersBs = backendSession.getStatementFactory().selectAllUsers();
         ResultSet rs = backendSession.getSession().execute(selectAllUsersBs);
         rs.forEach(
                 row -> {
                     executorService.execute(new DealerThread(backendSession, row.get("id", int.class)));
                 }
         );
-        }
+    }
 }
 

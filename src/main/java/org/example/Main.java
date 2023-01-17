@@ -6,6 +6,8 @@ import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
 import org.example.backend.dealer.DealerService;
+import org.example.backend.user.UserBiddingThread;
+import org.example.backend.user.UserService;
 
 @Slf4j
 public class Main {
@@ -17,7 +19,7 @@ public class Main {
             DealerService dealerService = new DealerService();
 //            dealerService.execute(backendSession,1);
 
-           UserService userService = new UserService();
+            UserService userService = new UserService();
             userService.execute(new UserBiddingThread(backendSession), 1);
             System.out.println("breakpoint");
         } catch (NumberFormatException e) {

@@ -4,7 +4,6 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Session;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import org.apache.cassandra.db.RangeTombstone;
 
 import static org.example.backend.statements.PreparedQueries.*;
 
@@ -31,6 +30,5 @@ public class BoundStatementFactory {
         selectDebtFromUser = new BoundStatement(session.prepare(SELECT_DEBT_FROM_USER));
         updateUserBalance = new BoundStatement(session.prepare(UPDATE_USER_BALANCE));
     }
-
 }
 
