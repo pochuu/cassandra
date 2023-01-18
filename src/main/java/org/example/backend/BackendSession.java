@@ -96,7 +96,7 @@ public class BackendSession {
         return timestamp.before(Date.from(Instant.now()));
     }
 
-    public boolean userHasMoney(long amount) {
+    private boolean userHasMoney(long amount) {
         BoundStatement bs = statementFactory.selectBalanceFromUser();
         bs.bind(userId);
         ResultSet resultSet = session.execute(bs);
@@ -104,7 +104,7 @@ public class BackendSession {
         return balance - 500 >= amount;
     }
 
-    public void placeBid(int auctionId, long newBid, long currentPrice) {
+    private void placeBid(int auctionId, long newBid, long currentPrice) {
         BoundStatement updateBidBs = statementFactory.updateBid();
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
         BoundStatement updateUserDebtBs = statementFactory.updateUserDebt();
