@@ -17,10 +17,10 @@ public class Main {
         try {
             BackendSession backendSession = loadPropertiesAndInitBackendSession();
             DealerService dealerService = new DealerService();
-//            dealerService.execute(backendSession,1);
+            dealerService.execute(backendSession, 1);
 
-            UserService userService = new UserService();
-            userService.execute(new UserBiddingThread(backendSession), 1);
+//            UserService userService = new UserService();
+//            userService.execute(new UserBiddingThread(backendSession), 1);
             System.out.println("breakpoint");
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
