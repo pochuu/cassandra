@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.statements.BoundStatementFactory;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -77,13 +79,19 @@ public class BackendSession {
                             long itemId = row.getInt("item_id");
                             long auctionId = row.getInt("auction_id");
                             long currentPrice = row.getLong("currentPrice");
-                            if (userHasMoney(currentPrice)) {
+                            Date timestamp = row.getTimestamp("bid_end_time");
+                            boolean hasExpired = checkIfExpired(timestamp);
+                            if (!hasExpired && userHasMoney(currentPrice)) {
                                 placeBid(itemId, auctionId, currentPrice + 500, currentPrice);
                             }
                         }
                     }
                 }
         );
+    }
+
+    private boolean checkIfExpired(Date timestamp) {
+        return timestamp.after(Date.from(Instant.now()));
     }
 
     public boolean userHasMoney(long amount) {
@@ -119,4 +127,6 @@ public class BackendSession {
         cluster.close();
     }
 
+    public void createAuctions() {
+    }
 }
