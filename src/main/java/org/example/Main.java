@@ -22,6 +22,8 @@ public class Main {
             UserService userService = new UserService();
             userService.execute(new UserBiddingThread(backendSession), 1);
             System.out.println("breakpoint");
+            backendSession.truncateAuctions();
+            backendSession.createAuctions();
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
         } catch (IOException e) {

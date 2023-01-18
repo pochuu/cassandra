@@ -3,10 +3,13 @@ package org.example.backend;
 import com.datastax.driver.core.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.auction.Auction;
 import org.example.backend.statements.BoundStatementFactory;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -22,7 +25,7 @@ public class BackendSession {
 
     private final BoundStatementFactory statementFactory;
 
-    private final long userId = 1L;
+    private final int userId = 1;
 
     public BackendSession(String contactPoint, String keyspace, int port) {
         this.contactPoint = contactPoint;
@@ -76,13 +79,12 @@ public class BackendSession {
                 row -> {
                     {
                         if (row.getInt("winning_user_id") != userId) {
-                            long itemId = row.getInt("item_id");
-                            long auctionId = row.getInt("auction_id");
-                            long currentPrice = row.getLong("currentPrice");
+                            int auctionId = row.getInt("auction_id");
+                            long currentPrice = row.getLong("current_price");
                             Date timestamp = row.getTimestamp("bid_end_time");
                             boolean hasExpired = checkIfExpired(timestamp);
                             if (!hasExpired && userHasMoney(currentPrice)) {
-                                placeBid(itemId, auctionId, currentPrice + 500, currentPrice);
+                                placeBid(auctionId, currentPrice + 500, currentPrice);
                             }
                         }
                     }
@@ -91,7 +93,7 @@ public class BackendSession {
     }
 
     private boolean checkIfExpired(Date timestamp) {
-        return timestamp.after(Date.from(Instant.now()));
+        return timestamp.before(Date.from(Instant.now()));
     }
 
     public boolean userHasMoney(long amount) {
@@ -102,23 +104,24 @@ public class BackendSession {
         return balance - 500 >= amount;
     }
 
-    public void placeBid(long itemId, long auctionId, long newBid, long currentPrice) {
+    public void placeBid(int auctionId, long newBid, long currentPrice) {
         BoundStatement updateBidBs = statementFactory.updateBid();
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
         BoundStatement updateUserDebtBs = statementFactory.updateUserDebt();
         BoundStatement updateUserBalanceBs = statementFactory.updateUserBalance();
         BatchStatement batchStatement = new BatchStatement();
 
-        updateBidBs.bind(userId, newBid, itemId, auctionId, currentPrice);
+        updateBidBs.bind(userId, newBid, auctionId, currentPrice);
         insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
-        updateUserDebtBs.bind(500, userId);//poki co hardkode
-        updateUserBalanceBs.bind(500, userId);
+        updateUserDebtBs.bind(500L, userId);//poki co hardkode
+        updateUserBalanceBs.bind(500L, userId);
 
         batchStatement.add(updateBidBs);
         batchStatement.add(insertIntoBidHistoryBs);
+        session.execute(batchStatement);
+        batchStatement.clear();
         batchStatement.add(updateUserBalanceBs);
         batchStatement.add(updateUserDebtBs);
-
         session.execute(batchStatement); //lepiej to w batchu wyslac, 3 tabelki lepiej zeby sie nie rozjechaly
     }
 
@@ -128,5 +131,25 @@ public class BackendSession {
     }
 
     public void createAuctions() {
+        Date dateNow = Date.from(Instant.now().plus(10, ChronoUnit.SECONDS));
+        final List<Auction> auctions = List.of(
+                Auction.builder().auctionId(1).itemId(1).currentPrice(100).bidEndTime(dateNow).minBidAmount(10).build(),
+                Auction.builder().auctionId(2).itemId(2).currentPrice(3000).bidEndTime(dateNow).minBidAmount(50).build(),
+                Auction.builder().auctionId(3).itemId(3).currentPrice(2000).bidEndTime(dateNow).minBidAmount(100).build(),
+                Auction.builder().auctionId(4).itemId(4).currentPrice(500).bidEndTime(dateNow).minBidAmount(55).build(),
+                Auction.builder().auctionId(5).itemId(5).currentPrice(200).bidEndTime(dateNow).minBidAmount(40).build()
+        );
+        BoundStatement bs = statementFactory.insertIntoAuction();
+        auctions.forEach(
+                auction -> {
+                    bs.bind(auction.getFields());
+                    session.execute(bs);
+                }
+        );
+    }
+
+    public void truncateAuctions() {
+        BoundStatement bs = statementFactory.truncateAuction();
+        session.execute(bs);
     }
 }

@@ -19,6 +19,8 @@ public class BoundStatementFactory {
     private final BoundStatement selectAllUsers;
     private final BoundStatement selectDebtFromUser;
     private final BoundStatement updateUserBalance;
+    private final BoundStatement truncateAuction;
+    private final BoundStatement insertIntoAuction;
 
     public BoundStatementFactory(Session session) {
         updateBid = new BoundStatement(session.prepare(UPDATE_BID_ORDER));
@@ -29,6 +31,8 @@ public class BoundStatementFactory {
         selectAllUsers = new BoundStatement(session.prepare(SELECT_ALL_FROM_USERS));
         selectDebtFromUser = new BoundStatement(session.prepare(SELECT_DEBT_FROM_USER));
         updateUserBalance = new BoundStatement(session.prepare(UPDATE_USER_BALANCE));
+        truncateAuction = new BoundStatement(session.prepare(TRUNCATE_AUCTION));
+        insertIntoAuction = new BoundStatement(session.prepare(INSERT_INTO_AUCTION));
     }
 }
 
