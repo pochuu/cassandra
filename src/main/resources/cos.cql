@@ -50,7 +50,9 @@
 
     INSERT INTO user_by_id(id,name) VALUES (1, 'Hubert');
     UPDATE user_by_id_with_balance SET balance = balance + 500000 WHERE id = 1;
-    INSERT INTO bid_order_by_item_id (auction_id , item_id , current_price ) VALUES (1,1,500);
+    UPDATE user_by_id_with_debt SET debt = debt + 1000 WHERE id = 1;
+    INSERT INTO bid_order_by_item_id (auction_id , item_id , current_price, winning_user_id  ) VALUES (1,1,500,1);
+
 
 
     INSERT INTO user_by_id(id,name) VALUES (2, 'Jonasz');

@@ -1,6 +1,7 @@
 package org.example.backend;
 
 import com.datastax.driver.core.*;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.auction.Auction;
@@ -62,14 +63,13 @@ public class BackendSession {
         return winningBidAmount.get();
     }
 
-    private void giveRefundToUser(long userId, long amount) {
-        BoundStatement bs = statementFactory.updateUserDebt();
-        bs.bind(-amount, userId);
-        session.execute(bs);
-
-        bs = statementFactory.updateUserBalance();
-        bs.bind(amount, userId);
-        session.execute(bs);
+    private void giveRefundToUser(int userId, long amount) {
+       BoundStatement bs1 = statementFactory.updateUserDebt();
+        BoundStatement bs2 = statementFactory.updateUserBalance();
+        bs1.bind(amount, userId);
+        bs2.bind(amount, userId);
+        session.execute(bs1); //updaty do countera nie da sie w batchu wyslac
+        session.execute(bs2);
     }
 
     public void checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException {

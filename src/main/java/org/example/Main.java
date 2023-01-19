@@ -17,7 +17,7 @@ public class Main {
         try {
             BackendSession backendSession = loadPropertiesAndInitBackendSession();
             DealerService dealerService = new DealerService();
-//            dealerService.execute(backendSession,1);
+            dealerService.execute(backendSession, 1);
 
             UserService userService = new UserService();
             userService.execute(new UserBiddingThread(backendSession), 1);
