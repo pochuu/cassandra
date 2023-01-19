@@ -15,15 +15,16 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            BackendSession backendSession = loadPropertiesAndInitBackendSession();
+            BackendSession backendSessionBidder = loadPropertiesAndInitBackendSession();
+            BackendSession backendSessionDealer = loadPropertiesAndInitBackendSession();
+            backendSessionBidder.truncateAuctions();
+            backendSessionBidder.createAuctions();
             DealerService dealerService = new DealerService();
-            dealerService.execute(backendSession, 1);
-
             UserService userService = new UserService();
-            userService.execute(new UserBiddingThread(backendSession), 1);
-            System.out.println("breakpoint");
-            backendSession.truncateAuctions();
-            backendSession.createAuctions();
+
+            dealerService.execute(backendSessionDealer, 1);
+            userService.execute(new UserBiddingThread(backendSessionBidder), 1);
+
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());
         } catch (IOException e) {

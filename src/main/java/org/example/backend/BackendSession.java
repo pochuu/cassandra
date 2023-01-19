@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -40,15 +41,34 @@ public class BackendSession {
         this.statementFactory = new BoundStatementFactory(session);
     }
 
-    public void checkUserDebtAndRefundIfNeeded(int userId) {
-        BoundStatement bs = statementFactory.selectDebtFromUser();
-        bs.bind(userId);
-        ResultSet resultSet = session.execute(bs);
-        long debt = resultSet.one().getLong("debt");
+    public boolean checkUserDebtAndRefundIfNeeded(int userId) {
+        AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
+        BoundStatement selectAllBids = statementFactory.selectAllBids();
+        BoundStatement selectDebtFromUser = statementFactory.selectDebtFromUser();
+        ResultSet resultSetCheckTimestamp = session.execute(selectAllBids);
+
+        selectDebtFromUser.bind(userId);
+        ResultSet resultSetUpdateDebt = session.execute(selectDebtFromUser);
+
+        long debt = resultSetUpdateDebt.one().getLong("debt");
         long currentWinningBids = addBidsFromWinningAuctions(userId);
         if (debt != currentWinningBids) {
             giveRefundToUser(userId, debt - currentWinningBids);
         }
+
+        resultSetCheckTimestamp.forEach(
+                row -> {
+                    {
+                        Date timestamp = row.getTimestamp("bid_end_time");
+                        boolean hasExpired = checkIfExpired(timestamp);
+                        if (!hasExpired) {
+                            isAnyAuctionAvailable.set(true);
+                        }
+                    }
+                }
+        );
+
+        return isAnyAuctionAvailable.get();
     }
 
     private long addBidsFromWinningAuctions(int userId) {
@@ -64,7 +84,7 @@ public class BackendSession {
     }
 
     private void giveRefundToUser(int userId, long amount) {
-       BoundStatement bs1 = statementFactory.updateUserDebt();
+        BoundStatement bs1 = statementFactory.updateUserDebt();
         BoundStatement bs2 = statementFactory.updateUserBalance();
         bs1.bind(amount, userId);
         bs2.bind(amount, userId);
@@ -72,24 +92,30 @@ public class BackendSession {
         session.execute(bs2);
     }
 
-    public void checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException {
+    public boolean checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException {
         BoundStatement bs = statementFactory.selectAllBids();
+        AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
         ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
                 row -> {
                     {
+                        Date timestamp = row.getTimestamp("bid_end_time");
+                        boolean hasExpired = checkIfExpired(timestamp);
+                        if (!hasExpired) {
+                            isAnyAuctionAvailable.set(true);
+                        }
                         if (row.getInt("winning_user_id") != userId) {
                             int auctionId = row.getInt("auction_id");
                             long currentPrice = row.getLong("current_price");
-                            Date timestamp = row.getTimestamp("bid_end_time");
-                            boolean hasExpired = checkIfExpired(timestamp);
+                            int minBidAmount = row.getInt("min_bid_amount");
                             if (!hasExpired && userHasMoney(currentPrice)) {
-                                placeBid(auctionId, currentPrice + 500, currentPrice);
+                                placeBid(auctionId, currentPrice + minBidAmount, currentPrice);
                             }
                         }
                     }
                 }
         );
+        return isAnyAuctionAvailable.get();
     }
 
     private boolean checkIfExpired(Date timestamp) {
@@ -101,7 +127,7 @@ public class BackendSession {
         bs.bind(userId);
         ResultSet resultSet = session.execute(bs);
         long balance = resultSet.one().getLong("balance");
-        return balance - 500 >= amount;
+        return balance >= amount;
     }
 
     private void placeBid(int auctionId, long newBid, long currentPrice) {
@@ -109,20 +135,16 @@ public class BackendSession {
         BoundStatement insertIntoBidHistoryBs = statementFactory.insertIntoBidHistory();
         BoundStatement updateUserDebtBs = statementFactory.updateUserDebt();
         BoundStatement updateUserBalanceBs = statementFactory.updateUserBalance();
-        BatchStatement batchStatement = new BatchStatement();
+        List<BoundStatement> boundStatements;
 
         updateBidBs.bind(userId, newBid, auctionId, currentPrice);
         insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
-        updateUserDebtBs.bind(500L, userId);//poki co hardkode
-        updateUserBalanceBs.bind(500L, userId);
+        updateUserDebtBs.bind( newBid, userId);//poki co hardkode
+        updateUserBalanceBs.bind( newBid, userId);
 
-        batchStatement.add(updateBidBs);
-        batchStatement.add(insertIntoBidHistoryBs);
-        session.execute(batchStatement);
-        batchStatement.clear();
-        batchStatement.add(updateUserBalanceBs);
-        batchStatement.add(updateUserDebtBs);
-        session.execute(batchStatement); //lepiej to w batchu wyslac, 3 tabelki lepiej zeby sie nie rozjechaly
+        boundStatements = List.of(updateBidBs, insertIntoBidHistoryBs, updateUserDebtBs, updateUserBalanceBs);
+
+        boundStatements.forEach(bs -> session.execute(bs));
     }
 
     public void close() {

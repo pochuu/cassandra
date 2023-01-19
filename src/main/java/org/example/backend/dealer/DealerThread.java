@@ -2,6 +2,7 @@ package org.example.backend.dealer;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.example.backend.BackendSession;
 
 @Getter
@@ -17,7 +18,11 @@ public class DealerThread implements Runnable {
 
     @Override
     public void run() {
-        backendSession.checkUserDebtAndRefundIfNeeded(user_id);
-    }
+        boolean run = true;
+        while(run){
+        run = backendSession.checkUserDebtAndRefundIfNeeded(user_id);
+        }
 
+        backendSession.close();
+    }
 }
