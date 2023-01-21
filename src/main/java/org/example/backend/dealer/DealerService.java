@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DealerService {
-    public void execute(BackendSession backendSession, int numberOfThreads) throws InterruptedException {
+    public ExecutorService execute(BackendSession backendSession, int numberOfThreads) throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         BoundStatement selectAllUsersBs = backendSession.getStatementFactory().selectAllUsers();
         ResultSet rs = backendSession.getSession().execute(selectAllUsersBs);
@@ -18,6 +18,9 @@ public class DealerService {
                     executorService.execute(new DealerThread(backendSession, row.get("id", int.class)));
                 }
         );
+        executorService.shutdown();
+        System.out.println("ex1 skonczyl egzekucje");
+        return executorService;
     }
 }
 

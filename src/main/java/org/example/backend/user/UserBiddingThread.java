@@ -15,6 +15,6 @@ public class UserBiddingThread extends Thread {
         while (run) {
             run = backendSession.checkForAuctionsAndPlaceBidIfImNotTheWinner();
         }
-        backendSession.close();
+//        backendSession.close();
     }
 }

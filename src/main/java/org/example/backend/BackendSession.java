@@ -104,11 +104,11 @@ public class BackendSession {
                         if (!hasExpired) {
                             isAnyAuctionAvailable.set(true);
                         }
-                        if (row.getInt("winning_user_id") != userId) {
+                        if (!hasExpired && row.getInt("winning_user_id") != userId) {
                             int auctionId = row.getInt("auction_id");
                             long currentPrice = row.getLong("current_price");
                             int minBidAmount = row.getInt("min_bid_amount");
-                            if (!hasExpired && userHasMoney(currentPrice)) {
+                            if (userHasMoney(currentPrice)) {
                                 placeBid(auctionId, currentPrice + minBidAmount, currentPrice);
                             }
                         }
@@ -119,7 +119,7 @@ public class BackendSession {
     }
 
     private boolean checkIfExpired(Date timestamp) {
-        return timestamp.before(Date.from(Instant.now()));
+        return timestamp.before(Date.from(Instant.now().minus(10, ChronoUnit.SECONDS)));
     }
 
     private boolean userHasMoney(long amount) {

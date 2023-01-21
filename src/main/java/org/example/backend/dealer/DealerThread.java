@@ -23,6 +23,6 @@ public class DealerThread implements Runnable {
         run = backendSession.checkUserDebtAndRefundIfNeeded(user_id);
         }
 
-        backendSession.close();
+//        backendSession.close();
     }
 }

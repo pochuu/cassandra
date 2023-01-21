@@ -20,5 +20,12 @@ services:
     networks:
       - kasia
 
+JAK ODPALIC W CMD:
+mvn compile
+mvn clean install
+mvn package
+mvn exec:java -Dexec.mainClass=org.example.Main
+
+
 
 
