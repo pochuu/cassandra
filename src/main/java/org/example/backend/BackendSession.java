@@ -27,9 +27,10 @@ public class BackendSession {
 
     private final BoundStatementFactory statementFactory;
 
-    private final int userId = 1;
+    private final int userId;
 
-    public BackendSession(String contactPoint, String keyspace, int port) {
+    public BackendSession(int userId, String contactPoint, String keyspace, int port) {
+        this.userId = userId;
         this.contactPoint = contactPoint;
         this.keyspace = keyspace;
         cluster = Cluster.builder()
@@ -122,6 +123,12 @@ public class BackendSession {
         return timestamp.before(Date.from(Instant.now().minus(10, ChronoUnit.SECONDS)));
     }
 
+    public boolean checkIfAuctionsAvailableYet() {
+        BoundStatement bs = statementFactory.selectAllBids();
+        ResultSet rs = session.execute(bs);
+        return rs.getAvailableWithoutFetching() > 0;
+    }
+
     private boolean userHasMoney(long amount) {
         BoundStatement bs = statementFactory.selectBalanceFromUser();
         bs.bind(userId);
@@ -139,12 +146,12 @@ public class BackendSession {
 
         updateBidBs.bind(userId, newBid, auctionId, currentPrice);
         insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
-        updateUserDebtBs.bind( newBid, userId);//poki co hardkode
-        updateUserBalanceBs.bind( newBid, userId);
+        updateUserDebtBs.bind(newBid, userId);//poki co hardkode
+        updateUserBalanceBs.bind(newBid, userId);
 
         boundStatements = List.of(updateBidBs, insertIntoBidHistoryBs, updateUserDebtBs, updateUserBalanceBs);
 
-        boundStatements.forEach(bs -> session.execute(bs));
+        boundStatements.forEach(session::execute);
     }
 
     public void close() {
