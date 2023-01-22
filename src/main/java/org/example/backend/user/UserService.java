@@ -15,7 +15,7 @@ public class UserService {
             executorService.execute(new UserBiddingThread(backendSession));
         }
         executorService.shutdown();
-        log.info("UserExecutor has stopped execution");
+        log.info("UserExecutor started executing all threads.");
         return executorService;
     }
 }

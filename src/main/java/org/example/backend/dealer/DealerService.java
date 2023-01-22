@@ -20,7 +20,7 @@ public class DealerService {
                 row -> executorService.execute(new DealerThread(backendSession, row.get("id", int.class)))
         );
         executorService.shutdown();
-        log.info("DealerExecutor has stopped execution");
+        log.info("DealerExecutor started executing all threads.");
         return executorService;
     }
 }

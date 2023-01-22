@@ -51,31 +51,6 @@
     INSERT INTO user_by_id(id,name) VALUES (1, 'Hubert');
     UPDATE user_by_id_with_balance SET balance = balance + 500000 WHERE id = 1;
     UPDATE user_by_id_with_debt SET debt = debt + 1000 WHERE id = 1;
-    INSERT INTO bid_order_by_auction_id (auction_id , item_id , current_price,bid_end_time,min_bid_amount) VALUES (1,1,500,dateof(now()), 10);
-
-
-
-    INSERT INTO user_by_id(id,name) VALUES (2, 'Jonasz');
-    INSERT INTO user_by_id(id,name) VALUES (3, 'Maciej');
-
-    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Obraz', 100);
-    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Dom', 3000);
-    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Mieszkanie', 2000);
-    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Auto', 500);
-    INSERT INTO item_by_id(id, item_name, start_bid) VALUES (1, 'Telewizor', 200);
-
-
-// TO NIZEJ WKLEIĆ BO WYSTARTOWANIU SERWERA
-
-    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
-    VALUES (1, 1, 100, 5, dateof(now()), 10);
-    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
-    VALUES (2, 2, 3000, 5, dateof(now()), 50);
-    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
-    VALUES (3, 3, 2000, 5, dateof(now()), 100);
-    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
-    VALUES (4, 4, 500, 5, dateof(now()), 55);
-    INSERT INTO bid_order_by_item_id(item_id, auction_id, current_price, max_number_of_participants, bid_end_time, min_bid_amount)
-    VALUES (5, 5, 200, 5, dateof(now()), 40);
+   INSERT INTO bid_order_by_auction_id (auction_id , item_id , current_price,bid_end_time,min_bid_amount, winning_user_id ) VALUES (1,1,500,dateof(now()), 10,50);
 
 

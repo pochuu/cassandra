@@ -59,13 +59,7 @@ public class BackendSession {
 
         resultSetCheckTimestamp.forEach(
                 row -> {
-                    {
-                        Date timestamp = row.getTimestamp("bid_end_time");
-                        boolean hasExpired = checkIfExpired(timestamp);
-                        if (!hasExpired) {
-                            isAnyAuctionAvailable.set(true);
-                        }
-                    }
+                        isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row));
                 }
         );
 
@@ -99,13 +93,8 @@ public class BackendSession {
         ResultSet resultSet = session.execute(bs);
         resultSet.forEach(
                 row -> {
-                    {
-                        Date timestamp = row.getTimestamp("bid_end_time");
-                        boolean hasExpired = checkIfExpired(timestamp);
-                        if (!hasExpired) {
-                            isAnyAuctionAvailable.set(true);
-                        }
-                        if (!hasExpired && row.getInt("winning_user_id") != userId) {
+                        isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row));
+                        if (isAnyAuctionAvailable.get() && row.getInt("winning_user_id") != userId) {
                             int auctionId = row.getInt("auction_id");
                             long currentPrice = row.getLong("current_price");
                             int minBidAmount = row.getInt("min_bid_amount");
@@ -113,20 +102,32 @@ public class BackendSession {
                                 placeBid(auctionId, currentPrice + minBidAmount, currentPrice);
                             }
                         }
-                    }
                 }
         );
         return isAnyAuctionAvailable.get();
     }
 
     private boolean checkIfExpired(Date timestamp) {
-        return timestamp.before(Date.from(Instant.now().minus(10, ChronoUnit.SECONDS)));
+        return timestamp.after(Date.from(Instant.now().minus(10, ChronoUnit.SECONDS)));
+    }
+    public boolean checkIfAnyAuctionAvailable(Row row)
+    {
+        Date timestamp = row.getTimestamp("bid_end_time");
+        return checkIfExpired(timestamp);
+
     }
 
     public boolean checkIfAuctionsAvailableYet() {
         BoundStatement bs = statementFactory.selectAllBids();
         ResultSet rs = session.execute(bs);
-        return rs.getAvailableWithoutFetching() > 0;
+        AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
+        if (rs.getAvailableWithoutFetching() > 0){
+        rs.forEach(
+                row -> {
+                    isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row));
+                }
+        );}
+        return isAnyAuctionAvailable.get();
     }
 
     private boolean userHasMoney(long amount) {
