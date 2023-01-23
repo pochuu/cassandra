@@ -5,14 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>Cassandra1</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>Cassandra</artifactId>
+    <version>1.0</version>
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <driver.version>4.15.0</driver.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
 
     <dependencies>
         <dependency>
@@ -43,4 +44,5 @@
             <version>2.0.5</version>
         </dependency>
     </dependencies>
+
 </project>

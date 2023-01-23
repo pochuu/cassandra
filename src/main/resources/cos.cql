@@ -49,8 +49,14 @@
     );
 
     INSERT INTO user_by_id(id,name) VALUES (1, 'Hubert');
+    INSERT INTO user_by_id(id,name) VALUES (2, 'Jonasz');
+    INSERT INTO user_by_id(id,name) VALUES (3, 'Maciej');
     UPDATE user_by_id_with_balance SET balance = balance + 500000 WHERE id = 1;
+    UPDATE user_by_id_with_balance SET balance = balance + 500000 WHERE id = 2;
+    UPDATE user_by_id_with_balance SET balance = balance + 500000 WHERE id = 3;
     UPDATE user_by_id_with_debt SET debt = debt + 1000 WHERE id = 1;
+    UPDATE user_by_id_with_debt SET debt = debt + 1000 WHERE id = 2;
+    UPDATE user_by_id_with_debt SET debt = debt + 1000 WHERE id = 3;
    INSERT INTO bid_order_by_auction_id (auction_id , item_id , current_price,bid_end_time,min_bid_amount, winning_user_id ) VALUES (1,1,500,dateof(now()), 10,50);
 
 

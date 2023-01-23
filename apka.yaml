@@ -1,0 +1,16 @@
+version: '1'
+
+services:
+  apka:
+    image: projekt
+    container_name: apka
+    networks:
+      - kasia
+
+networks:
+  kasia:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1

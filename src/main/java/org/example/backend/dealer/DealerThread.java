@@ -11,18 +11,15 @@ public class DealerThread implements Runnable {
     private final BackendSession backendSession;
     private int user_id;
 
-    public DealerThread(BackendSession backendSession, int user_id) {
+    public DealerThread(BackendSession backendSession) {
         this.backendSession = backendSession;
-        this.user_id = user_id;
     }
 
     @Override
     public void run() {
         boolean run = true;
         while(run){
-        run = backendSession.checkUserDebtAndRefundIfNeeded(user_id);
+        run = backendSession.checkUserDebtAndRefundIfNeeded();
         }
-
-//        backendSession.close();
     }
 }

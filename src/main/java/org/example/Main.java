@@ -27,7 +27,6 @@ public class Main {
                 auctionListener.waitForAuctionsIfUnavailable(); // blocking method
                 dealerExecutor = dealerService.execute(backendSession, 1);
                 userExecutor = userService.execute(backendSession, 1);
-
                 dealerExecutor.awaitTermination(100, TimeUnit.SECONDS);
                 log.info("Dealer executor has terminated");
                 userExecutor.awaitTermination(100, TimeUnit.SECONDS);
@@ -53,7 +52,8 @@ public class Main {
         prop.load(Main.class.getClassLoader().getResourceAsStream(PROPERTIES_FILENAME));
         String contactPoint = prop.getProperty("contactPoint");
         int port = Integer.parseInt(prop.getProperty("port"));
-        int userId = Integer.parseInt(System.getenv("USER_ID"));
+        int userId = Integer.parseInt(System.getProperty("user_id"));
+        log.info("USER_ID=" + userId);
         String keySpace = prop.getProperty("keySpace");
         return new BackendSession(userId, contactPoint, keySpace, port);
     }

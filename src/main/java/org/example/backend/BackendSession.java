@@ -42,7 +42,7 @@ public class BackendSession {
         this.statementFactory = new BoundStatementFactory(session);
     }
 
-    public boolean checkUserDebtAndRefundIfNeeded(int userId) {
+    public boolean checkUserDebtAndRefundIfNeeded() {
         AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
         BoundStatement selectAllBids = statementFactory.selectAllBids();
         BoundStatement selectDebtFromUser = statementFactory.selectDebtFromUser();
@@ -52,9 +52,9 @@ public class BackendSession {
         ResultSet resultSetUpdateDebt = session.execute(selectDebtFromUser);
 
         long debt = resultSetUpdateDebt.one().getLong("debt");
-        long currentWinningBids = addBidsFromWinningAuctions(userId);
+        long currentWinningBids = addBidsFromWinningAuctions();
         if (debt != currentWinningBids) {
-            giveRefundToUser(userId, debt - currentWinningBids);
+            giveRefundToUser(debt - currentWinningBids);
         }
 
         resultSetCheckTimestamp.forEach(
@@ -66,7 +66,7 @@ public class BackendSession {
         return isAnyAuctionAvailable.get();
     }
 
-    private long addBidsFromWinningAuctions(int userId) {
+    private long addBidsFromWinningAuctions() {
         BoundStatement bs = statementFactory.selectAllBids();
         ResultSet resultSet = session.execute(bs);
         AtomicLong winningBidAmount = new AtomicLong();
@@ -78,7 +78,7 @@ public class BackendSession {
         return winningBidAmount.get();
     }
 
-    private void giveRefundToUser(int userId, long amount) {
+    private void giveRefundToUser(long amount) {
         BoundStatement bs1 = statementFactory.updateUserDebt();
         BoundStatement bs2 = statementFactory.updateUserBalance();
         bs1.bind(amount, userId);
