@@ -53,15 +53,13 @@ public class BackendSession {
 
         long debt = resultSetUpdateDebt.one().getLong("debt");
         long currentWinningBids = addBidsFromWinningAuctions();
-        if (debt != currentWinningBids) {
-            giveRefundToUser(debt - currentWinningBids);
+        if (debt > currentWinningBids) {
+            giveRefundToUserFromClosedAuctions();
+        } else {
+            log.info("User debt is less or equal current winnings: (" + debt + ", " + currentWinningBids + "). Not refunding");
         }
 
-        resultSetCheckTimestamp.forEach(
-                row -> {
-                        isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row));
-                }
-        );
+        resultSetCheckTimestamp.forEach(row -> isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row)));
 
         return isAnyAuctionAvailable.get();
     }
@@ -78,13 +76,35 @@ public class BackendSession {
         return winningBidAmount.get();
     }
 
-    private void giveRefundToUser(long amount) {
-        BoundStatement bs1 = statementFactory.updateUserDebt();
-        BoundStatement bs2 = statementFactory.updateUserBalance();
-        bs1.bind(amount, userId);
-        bs2.bind(amount, userId);
-        session.execute(bs1); //updaty do countera nie da sie w batchu wyslac
-        session.execute(bs2);
+    private void giveRefundToUserFromClosedAuctions() {
+        BoundStatement bs = statementFactory.selectAllBids();
+        ResultSet resultSet = session.execute(bs);
+        resultSet.forEach(
+                row -> {
+                    Date timestamp = row.getTimestamp("bid_end_time");
+                    if (!checkIfExpired(timestamp)) {
+                        log.info("Refunding to user if needed from auction: " + row.getInt("auction_id"));
+                        refundToUserIfNeeded(row);
+                    }
+                }
+        );
+    }
+
+    private void refundToUserIfNeeded(Row row) {
+        BoundStatement bs1 = statementFactory.selectFromBidHistory();
+        bs1.bind(userId, row.getInt("auction_id"));
+        AtomicLong amount = new AtomicLong();
+        ResultSet resultSet = session.execute(bs1);
+        resultSet.forEach(r -> amount.addAndGet(r.getLong("amount")));
+        BoundStatement bs2 = statementFactory.updateUserDebt();
+        BoundStatement bs3 = statementFactory.updateUserBalance();
+        bs2.bind(amount.get(), userId);
+        if (row.getInt("winning_user_id") == userId) {
+            amount.addAndGet(-row.getLong("current_price"));
+        }
+        bs3.bind(amount.get(), userId);
+        session.execute(bs2); //updaty do countera nie da sie w batchu wyslac
+        session.execute(bs3);
     }
 
     public boolean checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException {
@@ -98,7 +118,8 @@ public class BackendSession {
                             int auctionId = row.getInt("auction_id");
                             long currentPrice = row.getLong("current_price");
                             int minBidAmount = row.getInt("min_bid_amount");
-                            if (userHasMoney(currentPrice)) {
+                            if (userHasMoney(currentPrice+minBidAmount)) {
+                                log.info("Having enough money, placing bid: " + (currentPrice+minBidAmount));
                                 placeBid(auctionId, currentPrice + minBidAmount, currentPrice);
                             }
                         }
@@ -114,19 +135,21 @@ public class BackendSession {
     {
         Date timestamp = row.getTimestamp("bid_end_time");
         return checkIfExpired(timestamp);
-
     }
 
     public boolean checkIfAuctionsAvailableYet() {
         BoundStatement bs = statementFactory.selectAllBids();
         ResultSet rs = session.execute(bs);
         AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
-        if (rs.getAvailableWithoutFetching() > 0){
-        rs.forEach(
-                row -> {
-                    isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row));
-                }
-        );}
+        if (rs.getAvailableWithoutFetching() > 0) {
+            rs.forEach(
+                    row -> {
+                        if (checkIfAnyAuctionAvailable(row)) {
+                            isAnyAuctionAvailable.set(true);
+                        }
+                    }
+            );
+        }
         return isAnyAuctionAvailable.get();
     }
 
@@ -135,6 +158,7 @@ public class BackendSession {
         bs.bind(userId);
         ResultSet resultSet = session.execute(bs);
         long balance = resultSet.one().getLong("balance");
+        log.info("Balance: " + balance);
         return balance >= amount;
     }
 
@@ -147,8 +171,8 @@ public class BackendSession {
 
         updateBidBs.bind(userId, newBid, auctionId, currentPrice);
         insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
-        updateUserDebtBs.bind(newBid, userId);//poki co hardkode
-        updateUserBalanceBs.bind(newBid, userId);
+        updateUserDebtBs.bind(-newBid, userId);//poki co hardkode
+        updateUserBalanceBs.bind(-newBid, userId);
 
         boundStatements = List.of(updateBidBs, insertIntoBidHistoryBs, updateUserDebtBs, updateUserBalanceBs);
 

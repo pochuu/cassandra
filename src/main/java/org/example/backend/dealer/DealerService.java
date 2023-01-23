@@ -1,11 +1,7 @@
 package org.example.backend.dealer;
 
-
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.ResultSet;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
-import org.example.backend.user.UserBiddingThread;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

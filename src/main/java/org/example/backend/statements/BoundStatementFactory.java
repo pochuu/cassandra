@@ -22,6 +22,7 @@ public class BoundStatementFactory {
     private final BoundStatement updateUserBalance;
     private final BoundStatement truncateAuction;
     private final BoundStatement insertIntoAuction;
+    private final BoundStatement selectFromBidHistory;
 
     public BoundStatementFactory(Session session) {
         updateBid = new BoundStatement(session.prepare(UPDATE_BID_ORDER).setConsistencyLevel(ConsistencyLevel.QUORUM));
@@ -34,6 +35,7 @@ public class BoundStatementFactory {
         updateUserBalance = new BoundStatement(session.prepare(UPDATE_USER_BALANCE).setConsistencyLevel(ConsistencyLevel.ONE));
         truncateAuction = new BoundStatement(session.prepare(TRUNCATE_AUCTION));
         insertIntoAuction = new BoundStatement(session.prepare(INSERT_INTO_AUCTION));
+        selectFromBidHistory = new BoundStatement(session.prepare(SELECT_FROM_BID_HISTORY));
     }
 }
 
