@@ -25,12 +25,13 @@ public class Main {
             AuctionListener auctionListener = new AuctionListener(backendSession);
             while (true) {
                 auctionListener.waitForAuctionsIfUnavailable(); // blocking method
-                dealerExecutor = dealerService.execute(backendSession, 1);
+//                dealerExecutor = dealerService.execute(backendSession, 1);
                 userExecutor = userService.execute(backendSession, 1);
-                dealerExecutor.awaitTermination(100, TimeUnit.SECONDS);
-                log.info("Dealer executor has terminated");
+//                dealerExecutor.awaitTermination(100, TimeUnit.SECONDS);
+//                log.info("Dealer executor has terminated");
                 userExecutor.awaitTermination(100, TimeUnit.SECONDS);
                 log.info("User executor has terminated");
+                backendSession.checkUserDebtAndRefundIfNeeded();
             }
         } catch (NumberFormatException e) {
             log.error("Could not parse int from properties: " + e.getMessage());

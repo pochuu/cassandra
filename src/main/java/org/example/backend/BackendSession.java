@@ -54,7 +54,7 @@ public class BackendSession {
         long debt = resultSetUpdateDebt.one().getLong("debt");
         long currentWinningBids = addBidsFromWinningAuctions();
         if (debt > currentWinningBids) {
-            giveRefundToUserFromClosedAuctions();
+            giveRefundToUser(debt-currentWinningBids);
         } else {
             log.info("User debt is less or equal current winnings: (" + debt + ", " + currentWinningBids + "). Not refunding");
         }
@@ -62,6 +62,15 @@ public class BackendSession {
         resultSetCheckTimestamp.forEach(row -> isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row)));
 
         return isAnyAuctionAvailable.get();
+    }
+
+    private void giveRefundToUser(long amount) {
+        BoundStatement bs2 = statementFactory.updateUserDebt();
+        BoundStatement bs3 = statementFactory.updateUserBalance();
+        bs2.bind(amount, userId);
+        bs3.bind(amount, userId);
+        session.execute(bs2);
+        session.execute(bs3);
     }
 
     private long addBidsFromWinningAuctions() {
@@ -93,17 +102,19 @@ public class BackendSession {
     private void refundToUserIfNeeded(Row row) {
         BoundStatement bs1 = statementFactory.selectFromBidHistory();
         bs1.bind(userId, row.getInt("auction_id"));
-        AtomicLong amount = new AtomicLong();
+        long amount;
         ResultSet resultSet = session.execute(bs1);
-        resultSet.forEach(r -> amount.addAndGet(r.getLong("amount")));
+        amount = resultSet.one().getLong("sum");
         BoundStatement bs2 = statementFactory.updateUserDebt();
         BoundStatement bs3 = statementFactory.updateUserBalance();
-        bs2.bind(amount.get(), userId);
-        if (row.getInt("winning_user_id") == userId) {
-            amount.addAndGet(-row.getLong("current_price"));
-        }
-        bs3.bind(amount.get(), userId);
+        log.info("Substracting from debt: " + amount);
+        bs2.bind(amount, userId);
         session.execute(bs2); //updaty do countera nie da sie w batchu wyslac
+        if (row.getInt("winning_user_id") == userId) {
+            amount -= row.getLong("current_price");
+            log.info("User won auction so lowering the amount: " + amount);
+        }
+        bs3.bind(amount, userId);
         session.execute(bs3);
     }
 
@@ -158,7 +169,6 @@ public class BackendSession {
         bs.bind(userId);
         ResultSet resultSet = session.execute(bs);
         long balance = resultSet.one().getLong("balance");
-        log.info("Balance: " + balance);
         return balance >= amount;
     }
 
