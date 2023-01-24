@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static java.lang.Thread.sleep;
+
 @Slf4j
 @Getter
 public class BackendSession {
@@ -42,105 +44,70 @@ public class BackendSession {
         this.statementFactory = new BoundStatementFactory(session);
     }
 
-    public boolean checkUserDebtAndRefundIfNeeded() {
-        AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
+    public void checkUserDebtAndRefundIfNeeded() throws InterruptedException {
         BoundStatement selectAllBids = statementFactory.selectAllBids();
-        BoundStatement selectDebtFromUser = statementFactory.selectDebtFromUser();
+        sleep(2000);
+
         ResultSet resultSetCheckTimestamp = session.execute(selectAllBids);
-
-        selectDebtFromUser.bind(userId);
-        ResultSet resultSetUpdateDebt = session.execute(selectDebtFromUser);
-
-        long debt = resultSetUpdateDebt.one().getLong("debt");
-        long currentWinningBids = addBidsFromWinningAuctions();
-        if (debt > currentWinningBids) {
-            giveRefundToUser(debt-currentWinningBids);
-        } else {
-            log.info("User debt is less or equal current winnings: (" + debt + ", " + currentWinningBids + "). Not refunding");
-        }
-
-        resultSetCheckTimestamp.forEach(row -> isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row)));
-
-        return isAnyAuctionAvailable.get();
-    }
-
-    private void giveRefundToUser(long amount) {
-        BoundStatement bs2 = statementFactory.updateUserDebt();
-        BoundStatement bs3 = statementFactory.updateUserBalance();
-        bs2.bind(amount, userId);
-        bs3.bind(amount, userId);
-        session.execute(bs2);
-        session.execute(bs3);
-    }
-
-    private long addBidsFromWinningAuctions() {
-        BoundStatement bs = statementFactory.selectAllBids();
-        ResultSet resultSet = session.execute(bs);
-        AtomicLong winningBidAmount = new AtomicLong();
-        resultSet.forEach(row -> {
-            if (row.getInt("winning_user_id") == userId) {
-                winningBidAmount.getAndAdd(row.getLong("current_price"));
-            }
-        });
-        return winningBidAmount.get();
-    }
-
-    private void giveRefundToUserFromClosedAuctions() {
-        BoundStatement bs = statementFactory.selectAllBids();
-        ResultSet resultSet = session.execute(bs);
-        resultSet.forEach(
-                row -> {
-                    Date timestamp = row.getTimestamp("bid_end_time");
-                    if (!checkIfExpired(timestamp)) {
-                        log.info("Refunding to user if needed from auction: " + row.getInt("auction_id"));
-                        refundToUserIfNeeded(row);
+        AtomicLong amounttosubstract = new AtomicLong();
+        resultSetCheckTimestamp.forEach(row -> {
+                    if(row.getInt("winning_user_id") == userId){
+                        long currentPrice = row.getLong("current_price");
+                        amounttosubstract.getAndAdd(currentPrice);
                     }
                 }
         );
+    if (amounttosubstract.get()> 0) {
+        BoundStatement updateUserBalanceBs = statementFactory.updateUserBalance();
+        updateUserBalanceBs.bind(-amounttosubstract.get(), userId);
+        session.execute(updateUserBalanceBs);
     }
 
-    private void refundToUserIfNeeded(Row row) {
-        BoundStatement bs1 = statementFactory.selectFromBidHistory();
-        bs1.bind(userId, row.getInt("auction_id"));
-        long amount;
-        ResultSet resultSet = session.execute(bs1);
-        amount = resultSet.one().getLong("sum");
-        BoundStatement bs2 = statementFactory.updateUserDebt();
-        BoundStatement bs3 = statementFactory.updateUserBalance();
-        log.info("Substracting from debt: " + amount);
-        bs2.bind(amount, userId);
-        session.execute(bs2); //updaty do countera nie da sie w batchu wyslac
-        if (row.getInt("winning_user_id") == userId) {
-            amount -= row.getLong("current_price");
-            log.info("User won auction so lowering the amount: " + amount);
-        }
-        bs3.bind(amount, userId);
-        session.execute(bs3);
     }
+
 
     public boolean checkForAuctionsAndPlaceBidIfImNotTheWinner() throws NullPointerException {
         BoundStatement bs = statementFactory.selectAllBids();
         AtomicBoolean isAnyAuctionAvailable = new AtomicBoolean(false);
+        AtomicLong sumAllBids = new AtomicLong();
         ResultSet resultSet = session.execute(bs);
+        ResultSet getAllPreviousBids = session.execute(bs);
+        getAllPreviousBids.forEach(
+                row ->
+                {
+                    if (row.getInt("winning_user_id") == userId) {
+                         sumAllBids.getAndAdd(row.getLong("current_price"));
+                    }
+                }
+        );
+
         resultSet.forEach(
                 row -> {
-                        isAnyAuctionAvailable.set(checkIfAnyAuctionAvailable(row));
-                        if (isAnyAuctionAvailable.get() && row.getInt("winning_user_id") != userId) {
-                            int auctionId = row.getInt("auction_id");
-                            long currentPrice = row.getLong("current_price");
-                            int minBidAmount = row.getInt("min_bid_amount");
-                            if (userHasMoney(currentPrice+minBidAmount)) {
-                                log.info("Having enough money, placing bid: " + (currentPrice+minBidAmount));
+                    {
+                        Date timestamp = row.getTimestamp("bid_end_time");
+                        boolean hasExpired = checkIfExpired(timestamp);
+                        if (hasExpired) {
+                            isAnyAuctionAvailable.set(true);
+                        }
+                        int auctionId = row.getInt("auction_id");
+                        long currentPrice = row.getLong("current_price");
+                        int minBidAmount = row.getInt("min_bid_amount");
+                        if (row.getInt("winning_user_id") != userId) {
+                            sumAllBids.getAndAdd(currentPrice + minBidAmount);
+                            if (hasExpired && userHasMoney(sumAllBids.get())) {
                                 placeBid(auctionId, currentPrice + minBidAmount, currentPrice);
                             }
                         }
+                    }
                 }
         );
         return isAnyAuctionAvailable.get();
     }
 
     private boolean checkIfExpired(Date timestamp) {
-        return timestamp.after(Date.from(Instant.now().minus(10, ChronoUnit.SECONDS)));
+
+        Date Tim = Date.from(Instant.now().minus(10, ChronoUnit.SECONDS));
+        return    timestamp.after(Date.from(Instant.now().minus(10, ChronoUnit.SECONDS)));
     }
     public boolean checkIfAnyAuctionAvailable(Row row)
     {
@@ -181,10 +148,10 @@ public class BackendSession {
 
         updateBidBs.bind(userId, newBid, auctionId, currentPrice);
         insertIntoBidHistoryBs.bind(userId, auctionId, newBid);
-        updateUserDebtBs.bind(-newBid, userId);//poki co hardkode
-        updateUserBalanceBs.bind(-newBid, userId);
+//        updateUserDebtBs.bind(-newBid, userId);//poki co hardkode
+//        updateUserBalanceBs.bind(-newBid, userId);
 
-        boundStatements = List.of(updateBidBs, insertIntoBidHistoryBs, updateUserDebtBs, updateUserBalanceBs);
+        boundStatements = List.of(updateBidBs, insertIntoBidHistoryBs);
 
         boundStatements.forEach(session::execute);
     }

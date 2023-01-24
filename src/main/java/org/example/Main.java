@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.BackendSession;
 import org.example.backend.auction.AuctionListener;
-import org.example.backend.dealer.DealerService;
 import org.example.backend.user.UserService;
 
 @Slf4j
@@ -17,18 +16,14 @@ public class Main {
 
     public static void main(String[] args) {
         BackendSession backendSession = null;
-        DealerService dealerService = new DealerService();
         UserService userService = new UserService();
-        ExecutorService dealerExecutor, userExecutor;
+        ExecutorService userExecutor;
         try {
             backendSession = loadPropertiesAndInitBackendSession();
             AuctionListener auctionListener = new AuctionListener(backendSession);
             while (true) {
                 auctionListener.waitForAuctionsIfUnavailable(); // blocking method
-//                dealerExecutor = dealerService.execute(backendSession, 1);
                 userExecutor = userService.execute(backendSession, 1);
-//                dealerExecutor.awaitTermination(100, TimeUnit.SECONDS);
-//                log.info("Dealer executor has terminated");
                 userExecutor.awaitTermination(100, TimeUnit.SECONDS);
                 log.info("User executor has terminated");
                 backendSession.checkUserDebtAndRefundIfNeeded();
