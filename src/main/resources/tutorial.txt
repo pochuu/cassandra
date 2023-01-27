@@ -22,3 +22,12 @@ services:
 
 
 
+
+docker run --net cassandra_kasia --init --ip 172.20.0.4 -e user_id=1 projekt
+docker run --net cassandra_kasia --init --ip 172.20.0.7 -e user_id=2 projekt
+docker run --net cassandra_kasia --init --ip 172.20.0.6 -e user_id=3 projekt
+docker build -f Containerfile -t projekt .
+
+
+
+
